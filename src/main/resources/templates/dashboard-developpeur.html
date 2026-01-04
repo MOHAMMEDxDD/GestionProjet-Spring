@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Workspace - Développeur</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f3f4f6; font-family: 'Segoe UI', sans-serif; }
+        .navbar-custom { background: white; box-shadow: 0 2px 15px rgba(0,0,0,0.04); padding: 15px 0; }
+        .avatar-circle { width: 40px; height: 40px; background-color: #3b82f6; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .kpi-card { border: none; border-radius: 12px; background: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); transition: transform 0.2s; }
+        .kpi-card:hover { transform: translateY(-5px); }
+        .icon-box { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .task-card { border: none; border-radius: 16px; background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.03); margin-bottom: 25px; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .task-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.08); }
+        .task-card.urgent { border-left: 5px solid #ef4444; }
+        .progress-thin { height: 6px; border-radius: 10px; background-color: #e5e7eb; margin-top: 15px; }
+        .btn-action { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; transition: 0.2s; }
+        .btn-action:hover { transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-custom sticky-top mb-4">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-layer-group text-primary fa-lg me-2"></i>
+                <h5 class="mb-0 fw-bold text-dark">DevSpace</h5>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <div class="text-end d-none d-md-block">
+                    <small class="text-muted d-block">Connecté en tant que</small>
+                    <span class="fw-bold text-dark" th:text="${user.nomComplet}">User</span>
+                </div>
+                <div class="avatar-circle" th:text="${#strings.substring(user.nomComplet,0,1)}">U</div>
+                <a href="/logout" class="btn btn-light btn-sm ms-2"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row mb-5">
+            <div class="col-md-3">
+                <div class="kpi-card d-flex align-items-center">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary me-3"><i class="fas fa-tasks"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0" th:text="${countTotal}">0</h3>
+                        <small class="text-muted">Total Assignées</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card d-flex align-items-center">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning me-3"><i class="fas fa-spinner"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0" th:text="${countProgress}">0</h3>
+                        <small class="text-muted">En Cours</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card d-flex align-items-center">
+                    <div class="icon-box bg-success bg-opacity-10 text-success me-3"><i class="fas fa-check-circle"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0" th:text="${countDone}">0</h3>
+                        <small class="text-muted">Terminées</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card d-flex align-items-center">
+                    <div class="icon-box bg-info bg-opacity-10 text-info me-3"><i class="fas fa-chart-line"></i></div>
+                    <div>
+                        <h3 class="fw-bold mb-0" th:text="${performance} + '%'">0%</h3>
+                        <small class="text-muted">Performance</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <h4 class="fw-bold mb-0 text-dark">Mes Tâches</h4>
+        </div>
+
+        <div class="row">
+            <div th:each="task : ${tasks}" class="col-md-6 col-lg-4">
+                <div class="card task-card h-100 p-3" th:classappend="${task.urgent} ? 'urgent' : ''">
+                    <div class="card-body d-flex flex-column">
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="badge bg-light text-secondary border" th:text="${task.project.nom}">Projet</span>
+                            <span th:if="${task.urgent}" class="badge bg-danger bg-opacity-10 text-danger"><i class="fas fa-fire me-1"></i>Urgent</span>
+                        </div>
+
+                        <h5 class="card-title fw-bold mb-2" th:text="${task.titre}">Titre</h5>
+                        <p class="text-muted small flex-grow-1" th:text="${task.description}">Description...</p>
+
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="fw-bold text-dark">Progression</span>
+                                <span th:text="${task.progression} + '%'">0%</span>
+                            </div>
+                            <div class="progress progress-thin">
+                                <div class="progress-bar bg-primary" 
+                                     th:style="'width: ' + ${task.progression} + '%'" 
+                                     th:classappend="${task.statut == 'TERMINE'} ? 'bg-success' : ''"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                            <div class="text-muted small">
+                                <i class="far fa-calendar-alt me-1"></i> <span th:text="${task.dateEcheance}">Date</span>
+                            </div>
+
+                            <form action="/task/updateStatus" method="post" class="d-flex gap-2">
+                                <input type="hidden" name="taskId" th:value="${task.id}">
+                                
+                                <button th:if="${task.statut == 'A_FAIRE'}" name="statut" value="EN_COURS" class="btn-action bg-primary text-white shadow-sm" title="Commencer">
+                                    <i class="fas fa-play fa-sm"></i>
+                                </button>
+
+                                <button th:if="${task.statut == 'EN_COURS'}" name="statut" value="TERMINE" class="btn-action bg-success text-white shadow-sm" title="Terminer">
+                                    <i class="fas fa-check fa-sm"></i>
+                                </button>
+                                
+                                <span th:if="${task.statut == 'TERMINE'}" class="text-success fw-bold small"><i class="fas fa-check-double me-1"></i> Fini</span>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${tasks.empty}" class="col-12 text-center py-5">
+                <i class="fas fa-coffee fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Aucune tâche assignée</h5>
+                <p class="text-muted small">Vous êtes à jour !</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

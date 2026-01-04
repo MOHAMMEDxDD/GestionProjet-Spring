@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ProjectManager Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
+        
+        /* Navbar Style */
+        .navbar-manager { background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 15px 0; }
+        .logo-text { font-weight: 800; background: linear-gradient(45deg, #2563eb, #9333ea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Cards Stats */
+        .stat-card { border: none; border-radius: 16px; background: white; padding: 25px; box-shadow: 0 2px 15px rgba(0,0,0,0.03); transition: transform 0.2s; position: relative; overflow: hidden; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { position: absolute; right: -10px; bottom: -10px; font-size: 5rem; opacity: 0.1; transform: rotate(-15deg); }
+        
+        /* Chart Section (FIXED HEIGHT) */
+        .chart-container { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 15px rgba(0,0,0,0.03); min-height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .chart-wrapper { position: relative; height: 250px; width: 100%; }
+
+        /* Search Bar */
+        .search-input { border-radius: 50px; padding: 15px 25px 15px 50px; border: 1px solid #e5e7eb; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.03); transition: all 0.3s; }
+        .search-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.15); }
+        .search-icon { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+
+        /* Project Cards */
+        .project-card { border: none; border-radius: 16px; background: white; transition: all 0.3s; border-left: 5px solid transparent; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .project-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .project-card.status-EN_COURS { border-left-color: #3b82f6; }
+        .project-card.status-ARCHIVE { border-left-color: #9ca3af; }
+        .project-card.status-TERMINE { border-left-color: #10b981; }
+        
+        .btn-add { background: linear-gradient(45deg, #2563eb, #1d4ed8); color: white; border: none; border-radius: 50px; padding: 12px 30px; font-weight: 600; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); transition: 0.3s; }
+        .btn-add:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4); }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-manager sticky-top mb-5">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fas fa-cubes fa-2x text-primary"></i>
+                <h4 class="mb-0 logo-text">ProjectManager Pro</h4>
+            </div>
+            <div class="d-flex gap-3">
+                <button class="btn btn-light rounded-circle shadow-sm" data-bs-toggle="modal" data-bs-target="#addMemberModal" title="Ajouter Membre"><i class="fas fa-user-plus"></i></button>
+                <a href="/logout" class="btn btn-outline-danger rounded-pill px-4">Déconnexion</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row mb-5 align-items-stretch">
+            
+            <div class="col-lg-8">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="stat-card bg-primary text-white h-100">
+                            <i class="fas fa-layer-group stat-icon text-white"></i>
+                            <h2 class="fw-bold display-4" th:text="${totalTasks}">0</h2>
+                            <p class="mb-0 opacity-75">Tâches Totales</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card bg-danger text-white h-100">
+                            <i class="fas fa-exclamation-triangle stat-icon text-white"></i>
+                            <h2 class="fw-bold display-4" th:text="${cntEnRetard}">0</h2>
+                            <p class="mb-0 opacity-75">Projets Critiques</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h4 class="fw-bold text-success" th:text="${cntTermine}">0</h4>
+                            <small class="text-muted">Terminées</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h4 class="fw-bold text-primary" th:text="${cntEnCours}">0</h4>
+                            <small class="text-muted">En Cours</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card">
+                            <h4 class="fw-bold text-warning" th:text="${cntAFaire}">0</h4>
+                            <small class="text-muted">À Faire</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <div class="chart-container">
+                    <h6 class="text-muted mb-3 fw-bold">Distribution des Tâches</h6>
+                    <div class="chart-wrapper">
+                        <canvas id="tasksChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0 position-relative">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Recherche rapide (Projet, Description...)...">
+            </div>
+            <div class="col-md-6 text-md-end d-flex gap-2 justify-content-end">
+                <button class="btn-add" data-bs-toggle="modal" data-bs-target="#addProjectModal"><i class="fas fa-folder-plus me-2"></i>Nouveau Projet</button>
+                <button class="btn btn-warning rounded-pill shadow-sm text-white fw-bold px-4" data-bs-toggle="modal" data-bs-target="#addTaskModal"><i class="fas fa-plus me-2"></i>Tâche</button>
+            </div>
+        </div>
+
+        <div class="row" id="projectsGrid">
+            <div th:each="proj : ${projects}" class="col-md-4 mb-4 project-item">
+                <div class="card project-card h-100 p-3" th:classappend="'status-' + ${proj.statut}">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="badge rounded-pill" 
+                              th:classappend="${proj.statut == 'EN_COURS' ? 'bg-primary' : 'bg-secondary'}"
+                              th:text="${proj.statut}">STATUS</span>
+                        <small class="text-muted"><i class="far fa-clock me-1"></i> <span th:text="${proj.dateDebut}">Date</span></small>
+                    </div>
+                    
+                    <h5 class="card-title fw-bold project-title" th:text="${proj.nom}">Nom Projet</h5>
+                    <p class="text-muted small flex-grow-1" th:text="${proj.description}">Desc...</p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                        <span class="fw-bold text-dark" th:text="${proj.budget} + ' €'">0 €</span>
+                        
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/project/edit/{id}(id=${proj.id})}" class="btn btn-light btn-sm rounded-circle text-secondary" title="Modifier">
+                                <i class="fas fa-pen"></i>
+                            </a>
+                            <a th:href="@{/project/archive/{id}(id=${proj.id})}" class="btn btn-light btn-sm rounded-circle text-secondary" title="Archiver">
+                                <i class="fas fa-archive"></i>
+                            </a>
+                            <a th:href="@{/project/details/{id}(id=${proj.id})}" class="btn btn-light btn-sm rounded-pill text-primary fw-bold">
+                                Voir <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="noResultMsg" class="col-12 text-center py-5 d-none">
+                <i class="fas fa-search fa-3x text-muted mb-3 opacity-25"></i>
+                <p class="text-muted">Aucun projet trouvé.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addProjectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/project/add" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nouveau Projet</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" name="nom" class="form-control mb-3" placeholder="Nom du projet" required>
+                        <textarea name="description" class="form-control mb-3" placeholder="Description"></textarea>
+                        <div class="row">
+                            <div class="col"><label class="small text-muted">Début</label><input type="date" name="dateDebut" class="form-control"></div>
+                            <div class="col"><label class="small text-muted">Fin</label><input type="date" name="dateFin" class="form-control"></div>
+                        </div>
+                        <input type="number" name="budget" class="form-control mt-3" placeholder="Budget (€)">
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-primary w-100">Créer</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addTaskModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/task/add" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nouvelle Tâche</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" name="titre" class="form-control mb-3" placeholder="Titre de la tâche" required>
+                        
+                        <label class="small text-muted">Projet</label>
+                        <select name="projectId" class="form-select mb-3">
+                            <option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.nom}"></option>
+                        </select>
+                        
+                        <label class="small text-muted">Développeur Assigné</label>
+                        <select name="responsableId" class="form-select mb-3">
+                            <option th:each="dev : ${developers}" 
+                                    th:value="${dev.id}" 
+                                    th:text="${dev.nomComplet} + ' (' + ${dev.poste} + ')'">
+                            </option>
+                        </select>
+                        
+                        <label class="small text-muted">Date Échéance</label>
+                        <input type="date" name="dateEcheance" class="form-control" required>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-warning w-100 fw-bold">Ajouter Tâche</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addMemberModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="/member/add" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nouveau Membre</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6 class="text-muted border-bottom pb-2 mb-3">Infos Personnelles</h6>
+                        
+                        <input type="text" name="nomComplet" class="form-control mb-3" placeholder="Nom Complet (Ex: Hassan Dev)" required>
+                        
+                        <div class="row mb-3">
+                            <div class="col">
+                                <input type="text" name="username" class="form-control" placeholder="Login" required>
+                            </div>
+                            <div class="col">
+                                <input type="password" name="password" class="form-control" placeholder="Mot de passe" required>
+                            </div>
+                        </div>
+
+                        <h6 class="text-muted border-bottom pb-2 mb-3 mt-4">Infos Professionnelles</h6>
+
+                        <label class="small text-primary fw-bold">Poste / Spécialité</label>
+                        <select name="poste" class="form-select mb-3">
+                            <option value="Développeur Fullstack">Développeur Fullstack</option>
+                            <option value="Développeur Backend">Développeur Backend</option>
+                            <option value="Développeur Frontend">Développeur Frontend</option>
+                            <option value="Développeur Mobile">Développeur Mobile</option>
+                            <option value="UI/UX Designer">UI/UX Designer</option>
+                            <option value="DevOps">DevOps</option>
+                        </select>
+
+                        <div class="row">
+                            <div class="col">
+                                <input type="text" name="telephone" class="form-control" placeholder="Tél (06...)">
+                            </div>
+                            <div class="col">
+                                <input type="number" name="salaire" class="form-control" placeholder="Salaire (€)">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer"><button class="btn btn-info w-100 text-white fw-bold">Ajouter Membre</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script th:inline="javascript">
+        // 1. CHART.JS CONFIG
+        const ctx = document.getElementById('tasksChart').getContext('2d');
+        const dataStats = [
+            [[${cntTermine}]], 
+            [[${cntEnCours}]], 
+            [[${cntAFaire}]], 
+            [[${cntEnRetard}]]
+        ];
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Terminé', 'En Cours', 'À Faire', 'Retard'],
+                datasets: [{
+                    data: dataStats,
+                    backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }
+                }
+            }
+        });
+
+        // 2. RECHERCHE AUTOMATIQUE (LIVE SEARCH)
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            let filter = this.value.toLowerCase();
+            let items = document.querySelectorAll('.project-item');
+            let found = false;
+
+            items.forEach(function(item) {
+                let title = item.querySelector('.project-title').innerText.toLowerCase();
+                if (title.includes(filter)) {
+                    item.style.display = ''; 
+                    found = true;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            document.getElementById('noResultMsg').classList.toggle('d-none', found);
+        });
+    </script>
+</body>
+</html>
