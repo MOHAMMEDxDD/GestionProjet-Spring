@@ -1,4 +1,4 @@
-package com.planification.gestionprojetweb;  // هادي هي السمية الصحيحة
+package com.planification.gestionprojetweb;  
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

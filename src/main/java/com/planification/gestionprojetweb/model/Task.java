@@ -11,7 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "tasks") // الطابل سميتو "tasks"
+@Table(name = "tasks") 
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -19,17 +19,17 @@ public class Task {
 
     private String titre;
     private String description;
-    private String statut; // A_FAIRE, EN_COURS, TERMINE, EN_RETARD
+    private String statut; 
     private LocalDate dateEcheance;
     private int progression;
     private boolean urgent;
 
-    // الربط مع الديفلوبر (Point 1 & 5)
+    
     @ManyToOne
     @JoinColumn(name = "responsable_id")
     private User responsable;
 
-    // الربط مع المشروع (Point 8)
+    
     @ManyToOne
     @JoinColumn(name = "project_id")
     private Project project;

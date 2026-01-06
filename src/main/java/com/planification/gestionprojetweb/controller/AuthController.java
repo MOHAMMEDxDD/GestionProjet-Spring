@@ -1,13 +1,14 @@
 package com.planification.gestionprojetweb.controller;
 
-import com.planification.gestionprojetweb.model.User;
-import com.planification.gestionprojetweb.service.UserService; // Oula Repository direct
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Controller; // Oula Repository direct
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.planification.gestionprojetweb.model.User;
+import com.planification.gestionprojetweb.service.UserService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -28,12 +29,12 @@ public class AuthController {
                         HttpSession session, 
                         Model model) {
         
-        User user = userService.authenticate(username, password); // Hdi la method li kat9leb 3la user
+        User user = userService.authenticate(username, password); 
 
         if (user != null) {
-            session.setAttribute("user", user); // Nkhbiw user f session
+            session.setAttribute("user", user); 
             
-            // Hna fin kanferr9o binathoum
+            
             if ("RESPONSABLE".equals(user.getRole())) {
                 return "redirect:/dashboard-responsable";
             } else {

@@ -13,7 +13,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "projects") // الطابل سميتو "projects"
+@Table(name = "projects") 
 public class Project {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,9 +22,9 @@ public class Project {
     private String nom;
     private String description;
     private LocalDate dateDebut;
-    private LocalDate dateFin; // Imta ykmel (Point 7)
-    private Double budget;     // Budget (Point 7)
-    private String statut;     // EN_COURS, ARCHIVE (Point 12 - Bibliotheque)
+    private LocalDate dateFin; 
+    private Double budget;     
+    private String statut;     
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
     private List<Task> tasks = new ArrayList<>();

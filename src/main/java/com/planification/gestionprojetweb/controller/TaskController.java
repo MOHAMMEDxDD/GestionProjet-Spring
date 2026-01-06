@@ -19,14 +19,14 @@ public class TaskController {
     @Autowired
     private TaskRepository taskRepository;
 
-    // الصفحة الرئيسية
+   
     @GetMapping("/")
     public String index(Model model) {
         model.addAttribute("tasks", taskRepository.findAll());
         return "index";
     }
 
-    // زيادة مهمة جديدة
+    
     @PostMapping("/add")
     public String addTask(@RequestParam String title, 
                           @RequestParam String description,
@@ -37,7 +37,7 @@ public class TaskController {
         return "redirect:/";
     }
 
-    // مسح مهمة
+    
     @GetMapping("/delete/{id}")
     public String deleteTask(@PathVariable Long id) {
         taskRepository.deleteById(id);
