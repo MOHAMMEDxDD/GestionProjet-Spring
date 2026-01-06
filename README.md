@@ -93,7 +93,7 @@ or   http://localhost:8080/login    directly
 
 Une version console de l’application est également disponible à l’adresse suivante :
 
-👉 https://github.com/username/nom-du-projet-console
+👉https://github.com/MOHAMMEDxDD/gestion-des-project-version-console-java.git
 
 Cette version permet de gérer les projets et les tâches directement via le terminal.
 
