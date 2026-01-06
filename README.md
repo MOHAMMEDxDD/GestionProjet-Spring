@@ -89,6 +89,14 @@ or   http://localhost:8080/login    directly
 3. Ajouter des tâches au projet.
 4. Affecter un responsable aux tâches.
 5. Suivre l’état d’avancement et les délais.
+## Version console
+
+Une version console de l’application est également disponible à l’adresse suivante :
+
+👉 https://github.com/username/nom-du-projet-console
+
+Cette version permet de gérer les projets et les tâches directement via le terminal.
+
 
 
 
