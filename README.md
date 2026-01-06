@@ -1,3 +1,8 @@
+# realaise par
+BZIZ MOHAMMED 
+BENAICHA ABDESSAMAD 
+IRAOUI ZAKARIA
+
 le rapport complet   [gestin des projets.pdf](https://github.com/user-attachments/files/24459332/gestin.des.projets.pdf)
 # 🚀 ProjectManager Pro - Application de Gestion de Projets
 
