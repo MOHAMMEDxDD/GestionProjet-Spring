@@ -38,3 +38,52 @@ Vous pouvez lancer l'application de deux manières :
 Ouvrez un terminal à la racine du projet et tapez :
 ```bash
 ./mvnw spring-boot:run
+
+
+## Démarrage du serveur
+src/main/java/com/planification/gestionprojetweb/gestionProjetWebApplication
+
+go run or to debug
+
+
+### Étapes pour lancer l’application
+
+1. Cloner le projet :
+   git clone https://github.com/username/nom-du-projet.git
+
+2. Ouvrir le projet dans IntelliJ IDEA ou Eclipse.
+
+3. Configurer la base de données dans le fichier :
+   src/main/resources/application.properties
+
+4. Lancer le serveur avec Maven :
+   mvn spring-boot:run
+
+5. Une fois le serveur démarré, l’application est accessible à l’adresse suivante :
+   http://localhost:8080
+or   http://localhost:8080/login    directly
+## Accès à l’application
+
+- Page principale :
+  http://localhost:8080
+
+- Page de connexion :
+  http://localhost:8080/login
+
+
+## Comptes de test
+
+### Administrateur
+- Login : Admin
+- Mot de passe : 123
+
+## Utilisation de l’application
+
+1. Se connecter avec un compte de test.
+2. Créer un nouveau projet.
+3. Ajouter des tâches au projet.
+4. Affecter un responsable aux tâches.
+5. Suivre l’état d’avancement et les délais.
+
+
+
