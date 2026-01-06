@@ -1,15 +1,25 @@
 package com.planification.gestionprojetweb.controller;
 
-import com.planification.gestionprojetweb.model.*;
-import com.planification.gestionprojetweb.repository.*;
-import jakarta.servlet.http.HttpSession;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.planification.gestionprojetweb.model.Project;
+import com.planification.gestionprojetweb.model.Task;
+import com.planification.gestionprojetweb.model.User;
+import com.planification.gestionprojetweb.repository.ProjectRepository;
+import com.planification.gestionprojetweb.repository.TaskRepository;
+import com.planification.gestionprojetweb.repository.UserRepository;
+
+import jakarta.servlet.http.HttpSession;
 
 @Controller
 public class ProjectController {
@@ -18,12 +28,14 @@ public class ProjectController {
     @Autowired private TaskRepository taskRepository;
     @Autowired private UserRepository userRepository;
 
-    // === 1. DASHBOARD ADMIN (Avec Filter Devs & Stats) ===
+    // ==========================================
+    // 1. MANAGER DASHBOARD (Project Manager)
+    // ==========================================
     @GetMapping("/dashboard-responsable")
     public String dashboard(Model model, @RequestParam(value = "keyword", required = false) String keyword) {
         List<Project> projects;
         
-        // Recherche
+        // Search Logic
         if (keyword != null && !keyword.isEmpty()) {
             projects = projectRepository.searchProjects(keyword);
         } else {
@@ -31,11 +43,10 @@ public class ProjectController {
         }
 
         model.addAttribute("projects", projects);
-        
-        // HNA FIN KAYN TAGHYIR: Kanjibo ghir les DEV bach n3tiwhom tasks
+        // Filter: Retrieve only Developers for task assignment
         model.addAttribute("developers", userRepository.findByRole("DEV"));
         
-        // Stats pour le Graphique
+        // Statistics for Chart.js
         model.addAttribute("totalTasks", taskRepository.count());
         model.addAttribute("cntEnRetard", taskRepository.countByStatut("EN_RETARD"));
         model.addAttribute("cntEnCours", taskRepository.countByStatut("EN_COURS"));
@@ -45,15 +56,19 @@ public class ProjectController {
         return "dashboard-responsable";
     }
 
-    // === 2. DASHBOARD DEV ===
+    // ==========================================
+    // 2. DEVELOPER DASHBOARD
+    // ==========================================
     @GetMapping("/dashboard-developpeur")
     public String dashboardDeveloppeur(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if (user == null) return "redirect:/login";
 
         Long userId = user.getId();
+        // Retrieve tasks assigned to the current developer
         List<Task> myTasks = taskRepository.findByResponsableId(userId);
         
+        // Performance KPIs
         long total = myTasks.size();
         long done = taskRepository.countByResponsableIdAndStatut(userId, "TERMINE");
         long inProgress = taskRepository.countByResponsableIdAndStatut(userId, "EN_COURS");
@@ -74,6 +89,7 @@ public class ProjectController {
         Task task = taskRepository.findById(taskId).orElse(null);
         if (task != null) {
             task.setStatut(statut);
+            // Auto-update progression based on status
             if(statut.equals("EN_COURS")) task.setProgression(50);
             if(statut.equals("TERMINE")) task.setProgression(100);
             taskRepository.save(task);
@@ -81,7 +97,9 @@ public class ProjectController {
         return "redirect:/dashboard-developpeur";
     }
 
-    // === CRUD Operations ===
+    // ==========================================
+    // 3. CRUD OPERATIONS & DETAILS
+    // ==========================================
     @GetMapping("/project/details/{id}")
     public String projectDetails(@PathVariable Long id, Model model) {
         Project project = projectRepository.findById(id).orElse(null);
@@ -102,10 +120,14 @@ public class ProjectController {
     @PostMapping("/task/add")
     public String addTask(@RequestParam String titre, @RequestParam Long projectId, @RequestParam Long responsableId, @RequestParam String dateEcheance) {
         Task task = new Task();
-        task.setTitre(titre); task.setStatut("A_FAIRE"); task.setProgression(0);
+        task.setTitre(titre); 
+        task.setStatut("A_FAIRE"); 
+        task.setProgression(0);
         task.setDateEcheance(LocalDate.parse(dateEcheance));
+        
         task.setProject(projectRepository.findById(projectId).orElse(null));
         task.setResponsable(userRepository.findById(responsableId).orElse(null));
+        
         taskRepository.save(task);
         return "redirect:/dashboard-responsable";
     }
@@ -113,71 +135,70 @@ public class ProjectController {
     @PostMapping("/member/add")
     public String addMember(User user) {
         user.setRole("DEV");
-        userRepository.save(user); // GHADI YSAUVEGARDI POSTE O TEL AUTOMATIQUEMENT
+        userRepository.save(user);
         return "redirect:/dashboard-responsable";
     }
 
     @GetMapping("/task/delete/{id}")
     public String deleteTask(@PathVariable Long id) {
         taskRepository.deleteById(id);
-        return "redirect:/dashboard-responsable";
+        return "redirect:/dashboard-responsable"; 
     }
 
     @GetMapping("/project/archive/{id}")
     public String archiveProject(@PathVariable Long id) {
         Project p = projectRepository.findById(id).orElse(null);
-        if(p != null) { p.setStatut("ARCHIVE"); projectRepository.save(p); }
+        if(p != null) { 
+            p.setStatut("ARCHIVE"); 
+            projectRepository.save(p); 
+        }
         return "redirect:/dashboard-responsable";
     }
 
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate(); return "redirect:/login";
-    }
     // ==========================================
-    // 4. MODIFICATION (EDIT FEATURE)
+    // 4. EDIT FEATURES (Modification)
     // ==========================================
-
-    // --- Modifier Projet ---
+    
+    // Edit Project
     @GetMapping("/project/edit/{id}")
     public String showEditProject(@PathVariable Long id, Model model) {
         Project p = projectRepository.findById(id).orElse(null);
         if (p != null) {
             model.addAttribute("project", p);
-            return "edit-project"; // Ghadi nsawbo had page db
+            return "edit-project";
         }
         return "redirect:/dashboard-responsable";
     }
 
     @PostMapping("/project/update")
     public String updateProject(@ModelAttribute Project project) {
-        // Spring Boot ghadi y3raf bli hada update hit 3ando ID déjà
-        projectRepository.save(project); 
+        projectRepository.save(project);
         return "redirect:/dashboard-responsable";
     }
 
-    // --- Modifier Tâche ---
+    // Edit Task
     @GetMapping("/task/edit/{id}")
     public String showEditTask(@PathVariable Long id, Model model) {
         Task t = taskRepository.findById(id).orElse(null);
         if (t != null) {
             model.addAttribute("task", t);
             model.addAttribute("projects", projectRepository.findAll());
-            model.addAttribute("developers", userRepository.findByRole("DEV")); // Bach tbdel dev
-            return "edit-task"; // Ghadi nsawbo had page db
+            model.addAttribute("developers", userRepository.findByRole("DEV"));
+            return "edit-task";
         }
         return "redirect:/dashboard-responsable";
     }
 
     @PostMapping("/task/update")
-    public String updateTask(@ModelAttribute Task task, 
-                             @RequestParam Long projectId, 
-                             @RequestParam Long responsableId) {
-        // Nraj3o lia9a m3a projet o dev
+    public String updateTask(@ModelAttribute Task task, @RequestParam Long projectId, @RequestParam Long responsableId) {
         task.setProject(projectRepository.findById(projectId).orElse(null));
         task.setResponsable(userRepository.findById(responsableId).orElse(null));
-        
         taskRepository.save(task);
-        return "redirect:/dashboard-responsable";
+        return "redirect:/project/details/" + projectId;
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        session.invalidate(); return "redirect:/login";
     }
 }
